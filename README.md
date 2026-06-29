@@ -1,4 +1,4 @@
-# Makeup-Recommendation-System
+# VanityAI
 
 A makeup recommendation app that suggests products based on a user’s beauty profile, preferences, budget, and skin concerns.
 
