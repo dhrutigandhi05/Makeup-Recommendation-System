@@ -1,0 +1,24 @@
+export type RecommendationRequest = {
+  age_range: string;
+  skin_type: string;
+  experience_level: string;
+  coverage: string;
+  max_price: number;
+  skin_tone: string;
+  skin_concerns: string[];
+};
+
+export type ProductRecommendation = {
+  category: string;
+  product_name: string;
+  brand: string;
+  price: number;
+  url: string;
+  match_score: number;
+  reason: string;
+};
+
+export type RecommendationResponse = {
+  profile: RecommendationRequest;
+  recommendations: ProductRecommendation[];
+};

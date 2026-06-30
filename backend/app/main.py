@@ -30,6 +30,15 @@ def get_recommendations(profile: RecommendationRequest):
                 "url": "https://example.com",
                 "match_score": 0.92,
                 "reason": "Recommended because it matches your skin type, coverage preference, and budget."
+            },
+            {
+                "category": "Concealer",
+                "product_name": "Sample Concealer",
+                "brand": "Sample Brand",
+                "price": 12.99,
+                "url": "https://example.com",
+                "match_score": 0.87,
+                "reason": "Recommended because it fits your selected skin concerns and budget."
             }
         ]
     }
