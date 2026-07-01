@@ -14,6 +14,7 @@ export type ProductRecommendation = {
   brand: string;
   price: number;
   url: string;
+  image_link?: string;
   match_score: number;
   reason: string;
 };

@@ -193,6 +193,13 @@ function App() {
           <div className="product-grid">
             {recommendations.map((product) => (
               <article className="product-card" key={product.product_name}>
+                  {product.image_link && (
+                    <img
+                      className="product-image"
+                      src={product.image_link}
+                      alt={product.product_name}
+                    />
+                  )}
                 <p className="category">{product.category}</p>
                 <h3>{product.product_name}</h3>
                 <p className="brand">{product.brand}</p>

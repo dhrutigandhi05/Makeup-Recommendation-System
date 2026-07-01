@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
+from app.recommender.productRecommender import recommend_products
 
 app = FastAPI(title="Makeup Recommendation API")
 
@@ -19,26 +20,8 @@ def root():
 
 @app.post("/api/recommendations")
 def get_recommendations(profile: RecommendationRequest):
+    recommendations = recommend_products(profile)
     return {
         "profile": profile,
-        "recommendations": [
-            {
-                "category": "Foundation",
-                "product_name": "Sample Foundation",
-                "brand": "Sample Brand",
-                "price": 19.99,
-                "url": "https://example.com",
-                "match_score": 0.92,
-                "reason": "Recommended because it matches your skin type, coverage preference, and budget."
-            },
-            {
-                "category": "Concealer",
-                "product_name": "Sample Concealer",
-                "brand": "Sample Brand",
-                "price": 12.99,
-                "url": "https://example.com",
-                "match_score": 0.87,
-                "reason": "Recommended because it fits your selected skin concerns and budget."
-            }
-        ]
+        "recommendations": recommendations,
     }

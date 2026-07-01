@@ -1,0 +1,55 @@
+{
+  "weights": {
+    "base_score": 0.25,
+    "experience_match": 0.15,
+    "skin_type_match": 0.2,
+    "coverage_match": 0.15,
+    "concern_match_per_item": 0.07,
+    "max_concern_score": 0.2,
+    "price_score": 0.15
+  },
+  "skin_type_keywords": {
+    "Oily": ["matte", "oil", "oil-free", "powder", "shine", "long wear"],
+    "Dry": ["hydrating", "moisturizing", "moisture", "cream", "dewy", "satin"],
+    "Combination": ["balance", "buildable", "natural", "lightweight"],
+    "Normal": ["natural", "smooth", "lightweight", "buildable"],
+    "Sensitive": ["gentle", "fragrance free", "hypoallergenic", "vegan", "natural"]
+  },
+  "concern_keywords": {
+    "Acne": ["acne", "blemish", "oil-free", "matte", "non-comedogenic"],
+    "Dark Circles": ["concealer", "brighten", "corrector", "coverage"],
+    "Hyperpigmentation": ["concealer", "corrector", "coverage", "full coverage"],
+    "Redness/Rosacea": ["redness", "rosacea", "green", "corrector", "sensitive"],
+    "Wrinkles": ["smoothing", "fine lines", "hydrating", "anti-aging"],
+    "Sensitive Skin": ["gentle", "fragrance free", "hypoallergenic", "sensitive"]
+  },
+  "coverage_keywords": {
+    "Light": ["lightweight", "sheer", "natural", "tint", "bare"],
+    "Medium": ["medium", "buildable", "natural", "smooth"],
+    "Full": ["full coverage", "coverage", "concealer", "long wear"]
+  },
+  "experience_product_types": {
+    "Beginner": ["foundation", "concealer", "blush", "mascara", "lipstick"],
+    "Intermediate": [
+      "foundation",
+      "concealer",
+      "blush",
+      "mascara",
+      "lipstick",
+      "bronzer",
+      "eyeshadow",
+      "eyeliner"
+    ],
+    "Advanced": [
+      "foundation",
+      "concealer",
+      "blush",
+      "mascara",
+      "lipstick",
+      "bronzer",
+      "eyeshadow",
+      "eyeliner",
+      "lip_liner"
+    ]
+  }
+}
