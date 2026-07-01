@@ -1,29 +1,67 @@
 import { useState } from "react";
 import "./App.css";
 import { getRecommendations } from "./services/api";
-import type { RecommendationRequest, ProductRecommendation } from "./types/recommendation";
+import type {
+  ProductRecommendation,
+  RecommendationRequest,
+} from "./types/recommendation";
+
+const skinConcernOptions = [
+  "Acne",
+  "Dark Circles",
+  "Hyperpigmentation",
+  "Redness/Rosacea",
+  "Wrinkles",
+  "Sensitive Skin",
+];
 
 function App() {
-  const [recommendations, setRecommendations] = useState<ProductRecommendation[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const sampleProfile: RecommendationRequest = {
+  const [formData, setFormData] = useState<RecommendationRequest>({
     age_range: "Under 20",
     skin_type: "Oily",
     experience_level: "Beginner",
     coverage: "Light",
     max_price: 20,
     skin_tone: "Light",
-    skin_concerns: ["Acne", "Dark Circles"],
-  };
+    skin_concerns: [],
+  });
 
-  async function handleTestRecommendation() {
+  const [recommendations, setRecommendations] = useState<ProductRecommendation[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function handleInputChange(
+    event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>
+  ) {
+    const { name, value } = event.target;
+
+    setFormData((previousData) => ({
+      ...previousData,
+      [name]: name === "max_price" ? Number(value) : value,
+    }));
+  }
+
+  function handleConcernChange(concern: string) {
+    setFormData((previousData) => {
+      const alreadySelected = previousData.skin_concerns.includes(concern);
+
+      return {
+        ...previousData,
+        skin_concerns: alreadySelected
+          ? previousData.skin_concerns.filter((item) => item !== concern)
+          : [...previousData.skin_concerns, concern],
+      };
+    });
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
     try {
       setLoading(true);
       setError("");
 
-      const data = await getRecommendations(sampleProfile);
+      const data = await getRecommendations(formData);
       setRecommendations(data.recommendations);
     } catch (err) {
       setError("Something went wrong while getting recommendations.");
@@ -38,16 +76,115 @@ function App() {
       <section className="hero">
         <h1>Makeup Recommendations</h1>
         <p>
-          Personalized product recommendations based on skin type, skin tone,
-          coverage preference, budget, and skin concerns.
+          Get personalized product recommendations based on your skin profile, coverage preference, budget, and skin concerns.
         </p>
+      </section>
 
-        <button onClick={handleTestRecommendation} disabled={loading}>
-          {loading ? "Loading..." : "Test Recommendations"}
+      <form className="recommendation-form" onSubmit={handleSubmit}>
+        <div className="form-grid">
+          <label>
+            Age Range
+            <select
+              name="age_range"
+              value={formData.age_range}
+              onChange={handleInputChange}
+            >
+              <option>Under 20</option>
+              <option>20-30</option>
+              <option>30-40</option>
+              <option>40+</option>
+            </select>
+          </label>
+
+          <label>
+            Skin Type
+            <select
+              name="skin_type"
+              value={formData.skin_type}
+              onChange={handleInputChange}
+            >
+              <option>Oily</option>
+              <option>Dry</option>
+              <option>Combination</option>
+              <option>Normal</option>
+              <option>Sensitive</option>
+            </select>
+          </label>
+
+          <label>
+            Experience Level
+            <select
+              name="experience_level"
+              value={formData.experience_level}
+              onChange={handleInputChange}
+            >
+              <option>Beginner</option>
+              <option>Intermediate</option>
+              <option>Advanced</option>
+            </select>
+          </label>
+
+          <label>
+            Coverage Preference
+            <select
+              name="coverage"
+              value={formData.coverage}
+              onChange={handleInputChange}
+            >
+              <option>Light</option>
+              <option>Medium</option>
+              <option>Full</option>
+            </select>
+          </label>
+
+          <label>
+            Maximum Price Per Product
+            <input
+              type="number"
+              name="max_price"
+              min="1"
+              value={formData.max_price}
+              onChange={handleInputChange}
+            />
+          </label>
+
+          <label>
+            Skin Tone
+            <select
+              name="skin_tone"
+              value={formData.skin_tone}
+              onChange={handleInputChange}
+            >
+              <option>Light</option>
+              <option>Medium</option>
+              <option>Deep</option>
+            </select>
+          </label>
+        </div>
+
+        <fieldset className="concerns-section">
+          <legend>Skin Concerns</legend>
+
+          <div className="concern-grid">
+            {skinConcernOptions.map((concern) => (
+              <label className="checkbox-label" key={concern}>
+                <input
+                  type="checkbox"
+                  checked={formData.skin_concerns.includes(concern)}
+                  onChange={() => handleConcernChange(concern)}
+                />
+                {concern}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Generating..." : "Get Recommendations"}
         </button>
 
         {error && <p className="error">{error}</p>}
-      </section>
+      </form>
 
       {recommendations.length > 0 && (
         <section className="results">
@@ -58,9 +195,11 @@ function App() {
               <article className="product-card" key={product.product_name}>
                 <p className="category">{product.category}</p>
                 <h3>{product.product_name}</h3>
-                <p>{product.brand}</p>
-                <p>${product.price.toFixed(2)}</p>
-                <p>Match Score: {(product.match_score * 100).toFixed(0)}%</p>
+                <p className="brand">{product.brand}</p>
+                <p className="price">${product.price.toFixed(2)}</p>
+                <p className="score">
+                  Match Score: {(product.match_score * 100).toFixed(0)}%
+                </p>
                 <p>{product.reason}</p>
                 <a href={product.url} target="_blank" rel="noreferrer">
                   View Product

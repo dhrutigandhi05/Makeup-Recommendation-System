@@ -7,12 +7,12 @@
 }
 
 .hero {
-  max-width: 800px;
-  margin-bottom: 3rem;
+  max-width: 850px;
+  margin-bottom: 2rem;
 }
 
 .hero h1 {
-  font-size: 2.5rem;
+  font-size: 2.7rem;
   margin-bottom: 1rem;
 }
 
@@ -21,15 +21,89 @@
   line-height: 1.6;
 }
 
+.recommendation-form {
+  max-width: 950px;
+  background: #171a23;
+  border: 1px solid #303442;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 1.2rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: bold;
+}
+
+select,
+input[type="number"] {
+  background: #262936;
+  color: white;
+  border: 1px solid #3a3f50;
+  border-radius: 8px;
+  padding: 0.85rem;
+  font-size: 1rem;
+}
+
+select:focus,
+input[type="number"]:focus {
+  outline: 2px solid #ff4d6d;
+}
+
+.concerns-section {
+  border: none;
+  padding: 0;
+  margin-top: 1.8rem;
+}
+
+.concerns-section legend {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.concern-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 0.9rem;
+}
+
+.checkbox-label {
+  background: #20232e;
+  border: 1px solid #353a49;
+  border-radius: 10px;
+  padding: 0.85rem;
+  flex-direction: row;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  accent-color: #ff4d6d;
+}
+
 button {
-  margin-top: 1.5rem;
+  margin-top: 1.8rem;
   background: #ff4d6d;
   color: white;
   border: none;
-  padding: 0.9rem 1.4rem;
+  padding: 0.95rem 1.5rem;
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
+  font-size: 1rem;
+}
+
+button:hover {
+  background: #ff335c;
 }
 
 button:disabled {
@@ -43,12 +117,17 @@ button:disabled {
 }
 
 .results {
-  max-width: 1000px;
+  max-width: 1100px;
+}
+
+.results h2 {
+  font-size: 2rem;
+  margin-bottom: 1.2rem;
 }
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.2rem;
 }
 
@@ -61,6 +140,7 @@ button:disabled {
 
 .product-card h3 {
   margin-top: 0.4rem;
+  margin-bottom: 0.5rem;
 }
 
 .category {
@@ -68,7 +148,31 @@ button:disabled {
   font-weight: bold;
 }
 
+.brand {
+  color: #c7c7c7;
+}
+
+.price {
+  font-weight: bold;
+}
+
+.score {
+  color: #9ee6a8;
+  font-weight: bold;
+}
+
 .product-card a {
   color: #6ea8ff;
   font-weight: bold;
+}
+
+@media (max-width: 700px) {
+  .app {
+    padding: 1.5rem;
+  }
+
+  .form-grid,
+  .concern-grid {
+    grid-template-columns: 1fr;
+  }
 }
