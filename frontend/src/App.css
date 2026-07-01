@@ -175,6 +175,16 @@ button:disabled {
   margin-bottom: 1rem;
 }
 
+.no-results {
+  max-width: 950px;
+  background: #20232e;
+  border: 1px solid #353a49;
+  border-radius: 10px;
+  padding: 1rem;
+  color: #ffd6df;
+  margin-bottom: 2rem;
+}
+
 @media (max-width: 700px) {
   .app {
     padding: 1.5rem;

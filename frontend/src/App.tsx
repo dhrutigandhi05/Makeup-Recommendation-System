@@ -1,10 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 import { getRecommendations } from "./services/api";
-import type {
-  ProductRecommendation,
-  RecommendationRequest,
-} from "./types/recommendation";
+import type { ProductRecommendation, RecommendationRequest } from "./types/recommendation";
 
 const skinConcernOptions = [
   "Acne",
@@ -29,6 +26,7 @@ function App() {
   const [recommendations, setRecommendations] = useState<ProductRecommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   function handleInputChange(
     event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>
@@ -60,10 +58,11 @@ function App() {
     try {
       setLoading(true);
       setError("");
-
+      setHasSubmitted(true);
       const data = await getRecommendations(formData);
       setRecommendations(data.recommendations);
     } catch (err) {
+      setRecommendations([]);
       setError("Something went wrong while getting recommendations.");
       console.error(err);
     } finally {
@@ -76,7 +75,8 @@ function App() {
       <section className="hero">
         <h1>Makeup Recommendations</h1>
         <p>
-          Get personalized product recommendations based on your skin profile, coverage preference, budget, and skin concerns.
+          Get personalized product recommendations based on your skin profile,
+          coverage preference, budget, and skin concerns.
         </p>
       </section>
 
@@ -186,6 +186,13 @@ function App() {
         {error && <p className="error">{error}</p>}
       </form>
 
+      {hasSubmitted && !loading && recommendations.length === 0 && !error && (
+        <p className="no-results">
+          No products matched your current filters. Try increasing your max price
+          or selecting fewer concerns.
+        </p>
+      )}
+
       {recommendations.length > 0 && (
         <section className="results">
           <h2>Recommended Products</h2>
@@ -193,13 +200,14 @@ function App() {
           <div className="product-grid">
             {recommendations.map((product) => (
               <article className="product-card" key={product.product_name}>
-                  {product.image_link && (
-                    <img
-                      className="product-image"
-                      src={product.image_link}
-                      alt={product.product_name}
-                    />
-                  )}
+                {product.image_link && (
+                  <img
+                    className="product-image"
+                    src={product.image_link}
+                    alt={product.product_name}
+                  />
+                )}
+
                 <p className="category">{product.category}</p>
                 <h3>{product.product_name}</h3>
                 <p className="brand">{product.brand}</p>
