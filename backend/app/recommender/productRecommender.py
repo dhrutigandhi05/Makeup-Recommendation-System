@@ -1,11 +1,13 @@
 import json
 from functools import lru_cache
 from typing import Any
-import pandas as pd
-from app.config import PRODUCT_DATA_PATH, RECOMMENDER_RULES_PATH
+from sqlalchemy.orm import Session
+from app.config import RECOMMENDER_RULES_PATH
+from app.dbModels import Product
+from app.repositories.productRepository import getAvailableProducts
 
 @lru_cache(maxsize=1)
-def load_rules() -> dict:
+def loadRules() -> dict:
     if not RECOMMENDER_RULES_PATH.exists():
         raise FileNotFoundError(
             f"Recommender rules file not found at {RECOMMENDER_RULES_PATH}"
@@ -14,108 +16,85 @@ def load_rules() -> dict:
     with open(RECOMMENDER_RULES_PATH, "r", encoding="utf-8") as file:
         return json.load(file)
 
-@lru_cache(maxsize=1)
-def load_products() -> pd.DataFrame:
-    if not PRODUCT_DATA_PATH.exists():
-        raise FileNotFoundError(
-            f"Product data file not found at {PRODUCT_DATA_PATH}. "
-            "Run scripts/fetch_makeup_api.py first."
-        )
-
-    df = pd.read_csv(PRODUCT_DATA_PATH)
-    df["price"] = pd.to_numeric(df["price"], errors="coerce")
-    df = df.dropna(subset=["price"])
-    df = df[df["price"] > 0]
-
-    text_columns = [
-        "brand",
-        "name",
-        "description",
-        "category",
-        "product_type",
-        "tag_list",
-        "product_link",
-        "website_link",
-        "image_link",
-    ]
-
-    for column in text_columns:
-        if column not in df.columns:
-            df[column] = ""
-        df[column] = df[column].fillna("")
-
-    return df
-
-def contains_any(text: str, keywords: list[str]) -> bool:
+def containsAny(text: str, keywords: list[str]) -> bool:
     return any(keyword.lower() in text for keyword in keywords)
 
-def build_product_text(product: pd.Series) -> str:
+def buildProductText(product: Product) -> str:
     fields = [
-        product.get("brand", ""),
-        product.get("name", ""),
-        product.get("description", ""),
-        product.get("category", ""),
-        product.get("product_type", ""),
-        product.get("tag_list", ""),
+        product.brand_name,
+        product.product_name,
+        product.description,
+        product.ingredients,
+        product.highlights,
+        product.category,
+        product.product_type,
+        product.tags,
     ]
 
-    return " ".join(str(field) for field in fields).lower()
+    return " ".join(str(field or "") for field in fields).lower()
 
-def score_product(product: pd.Series, profile: Any, rules: dict) -> tuple[float, list[str]]:
+def scoreProduct(product: Product, profile: Any, rules: dict) -> tuple[float, list[str]]:
     weights = rules["weights"]
-    skin_type_keywords = rules["skin_type_keywords"]
-    concern_keywords = rules["concern_keywords"]
-    coverage_keywords = rules["coverage_keywords"]
-    experience_product_types = rules["experience_product_types"]
-    text = build_product_text(product)
+    skinTypeKeywords = rules["skin_type_keywords"]
+    concernKeywords = rules["concern_keywords"]
+    coverageKeywords = rules["coverage_keywords"]
+    experienceProductTypes = rules["experience_product_types"]
+    text = buildProductText(product)
     score = weights["base_score"]
     reasons = []
-    product_type = str(product.get("product_type", "")).lower()
+    productType = str(product.product_type or "").lower()
 
-    preferred_types = experience_product_types.get(
+    preferredTypes = experienceProductTypes.get(
         profile.experience_level,
-        experience_product_types["Beginner"],
+        experienceProductTypes["Beginner"],
     )
 
-    if product_type in preferred_types:
+    normalizedPreferredTypes = [
+        item.lower().replace("_", " ") for item in preferredTypes
+    ]
+
+    if productType in normalizedPreferredTypes:
         score += weights["experience_match"]
         reasons.append(f"fits a {profile.experience_level.lower()} makeup routine")
 
-    skin_keywords = skin_type_keywords.get(profile.skin_type, [])
+    selectedSkinKeywords = skinTypeKeywords.get(profile.skin_type, [])
 
-    if contains_any(text, skin_keywords):
+    if containsAny(text, selectedSkinKeywords):
         score += weights["skin_type_match"]
         reasons.append(f"matches {profile.skin_type.lower()} skin")
 
-    selected_coverage_keywords = coverage_keywords.get(profile.coverage, [])
+    selectedCoverageKeywords = coverageKeywords.get(profile.coverage, [])
 
-    if contains_any(text, selected_coverage_keywords):
+    if containsAny(text, selectedCoverageKeywords):
         score += weights["coverage_match"]
         reasons.append(f"aligns with {profile.coverage.lower()} coverage")
 
-    matched_concerns = []
+    matchedConcerns = []
 
     for concern in profile.skin_concerns:
-        selected_concern_keywords = concern_keywords.get(concern, [])
+        selectedConcernKeywords = concernKeywords.get(concern, [])
 
-        if contains_any(text, selected_concern_keywords):
-            matched_concerns.append(concern)
+        if containsAny(text, selectedConcernKeywords):
+            matchedConcerns.append(concern)
 
-    if matched_concerns:
-        concern_score = min(
+    if matchedConcerns:
+        concernScore = min(
             weights["max_concern_score"],
-            weights["concern_match_per_item"] * len(matched_concerns),
+            weights["concern_match_per_item"] * len(matchedConcerns),
         )
 
-        score += concern_score
-        reasons.append("supports concerns like " + ", ".join(matched_concerns))
+        score += concernScore
+        reasons.append("supports concerns like " + ", ".join(matchedConcerns))
 
-    price = float(product.get("price", 0))
-
-    if price <= profile.max_price:
-        price_score = max(0, 1 - price / profile.max_price)
-        score += weights["price_score"] * price_score
+    if product.price and product.price <= profile.max_price:
+        priceScore = max(0, 1 - float(product.price) / profile.max_price)
+        score += weights["price_score"] * priceScore
         reasons.append(f"fits your ${profile.max_price:.0f} budget")
+
+    if product.rating:
+        ratingScore = min(float(product.rating) / 5, 1)
+        score += 0.05 * ratingScore
+        reasons.append("has positive product rating data")
 
     score = min(score, 0.99)
 
@@ -124,46 +103,47 @@ def score_product(product: pd.Series, profile: Any, rules: dict) -> tuple[float,
 
     return score, reasons
 
-def recommend_products(profile: Any, limit: int = 8) -> list[dict]:
-    rules = load_rules()
-    df = load_products()
+def formatProductRecommendation(
+    product: Product,
+    score: float,
+    reasons: list[str],
+) -> dict:
+    productUrl = product.product_url or product.website_url or ""
 
-    filtered_df = df[df["price"] <= profile.max_price].copy()
+    return {
+        "category": str(product.product_type or product.category or "Product").title(),
+        "product_name": product.product_name,
+        "brand": product.brand_name.title() if product.brand_name else "Unknown Brand",
+        "price": float(product.price or 0),
+        "url": productUrl,
+        "image_link": product.image_link or "",
+        "match_score": round(score, 2),
+        "reason": "Recommended because it " + ", ".join(reasons[:3]) + ".",
+    }
 
-    if filtered_df.empty:
+def recommendProducts(db: Session, profile: Any, limit: int = 8) -> list[dict]:
+    rules = loadRules()
+    products = getAvailableProducts(db, profile.max_price)
+
+    if not products:
         return []
 
-    scored_products = []
+    scoredProducts = []
 
-    for _, product in filtered_df.iterrows():
-        score, reasons = score_product(product, profile, rules)
+    for product in products:
+        score, reasons = scoreProduct(product, profile, rules)
 
-        product_url = product.get("product_link") or product.get("website_link")
-
-        if not product_url:
+        if not product.product_url and not product.website_url:
             continue
 
-        scored_products.append(
-            {
-                "category": str(product.get("product_type", "")).title(),
-                "product_name": str(product.get("name", "")),
-                "brand": str(product.get("brand", "")).title()
-                if product.get("brand")
-                else "Unknown Brand",
-                "price": float(product.get("price", 0)),
-                "url": str(product_url),
-                "image_link": str(product.get("image_link", "")),
-                "match_score": round(score, 2),
-                "reason": "Recommended because it "
-                + ", ".join(reasons[:3])
-                + ".",
-            }
+        scoredProducts.append(
+            formatProductRecommendation(product, score, reasons)
         )
 
-    scored_products = sorted(
-        scored_products,
+    scoredProducts = sorted(
+        scoredProducts,
         key=lambda item: item["match_score"],
         reverse=True,
     )
 
-    return scored_products[:limit]
+    return scoredProducts[:limit]

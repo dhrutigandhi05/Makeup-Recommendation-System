@@ -1,7 +1,9 @@
 from typing import List
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
-from app.recommender.productRecommender import recommend_products
+from sqlalchemy.orm import Session
+from app.database import SessionLocal
+from app.recommender.productRecommender import recommendProducts
 
 app = FastAPI(title="Makeup Recommendation API")
 
@@ -14,18 +16,29 @@ class RecommendationRequest(BaseModel):
     skin_tone: str
     skin_concerns: List[str]
 
+def getDb():
+    db = SessionLocal()
+
+    try:
+        yield db
+    finally:
+        db.close()
+
 @app.get("/")
 def root():
     return {"message": "Makeup Recommendation API is running"}
 
 @app.get("/api/health")
-def health_check():
+def healthCheck():
     return {"status": "ok"}
 
 @app.post("/api/recommendations")
-def get_recommendations(profile: RecommendationRequest):
+def getRecommendations(
+    profile: RecommendationRequest,
+    db: Session = Depends(getDb),
+):
     try:
-        recommendations = recommend_products(profile)
+        recommendations = recommendProducts(db, profile)
 
         return {
             "profile": profile,
@@ -38,8 +51,10 @@ def get_recommendations(profile: RecommendationRequest):
             detail=str(error),
         )
 
-    except Exception:
+    except Exception as error:
+        print(error)
+
         raise HTTPException(
             status_code=500,
-            detail="Unexpected error while generating recommendations",
+            detail="Unexpected error while finding recommendations.",
         )
