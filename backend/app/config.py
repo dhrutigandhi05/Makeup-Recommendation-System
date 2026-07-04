@@ -22,5 +22,15 @@ RECOMMENDER_RULES_PATH = ROOT_DIR / os.getenv(
     "config/recommenderRules.json",
 )
 
+ML_MODEL_PATH = ROOT_DIR / os.getenv(
+    "ML_MODEL_PATH",
+    "models/recommendationModel.joblib",
+)
+
+ML_METRICS_PATH = ROOT_DIR / os.getenv(
+    "ML_METRICS_PATH",
+    "models/recommendationModelMetrics.json",
+)
+
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL is missing")
