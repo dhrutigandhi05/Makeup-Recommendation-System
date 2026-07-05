@@ -17,6 +17,7 @@ export type ProductRecommendation = {
   image_link?: string;
   match_score: number;
   ml_score?: number | null;
+  routine_step?: string;
   reason: string;
 };
 

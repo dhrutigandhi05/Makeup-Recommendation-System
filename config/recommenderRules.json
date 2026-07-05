@@ -51,5 +51,104 @@
       "eyeliner",
       "lip_liner"
     ]
-  }
+  },
+"routine_slots": {
+  "Beginner": [
+    {
+      "slot": "Base",
+      "product_types": ["foundation", "bb cream", "cc cream", "tinted moisturizer"]
+    },
+    {
+      "slot": "Concealer",
+      "product_types": ["concealer"]
+    },
+    {
+      "slot": "Blush",
+      "product_types": ["blush"]
+    },
+    {
+      "slot": "Mascara",
+      "product_types": ["mascara"]
+    },
+    {
+      "slot": "Lip Product",
+      "product_types": ["lipstick", "lip gloss", "lip stain"]
+    }
+  ],
+  "Intermediate": [
+    {
+      "slot": "Base",
+      "product_types": ["foundation", "bb cream", "cc cream", "tinted moisturizer"]
+    },
+    {
+      "slot": "Concealer",
+      "product_types": ["concealer"]
+    },
+    {
+      "slot": "Blush",
+      "product_types": ["blush"]
+    },
+    {
+      "slot": "Bronzer",
+      "product_types": ["bronzer"]
+    },
+    {
+      "slot": "Mascara",
+      "product_types": ["mascara"]
+    },
+    {
+      "slot": "Eyeliner",
+      "product_types": ["eyeliner"]
+    },
+    {
+      "slot": "Lip Product",
+      "product_types": ["lipstick", "lip gloss", "lip liner", "lip stain"]
+    }
+  ],
+  "Advanced": [
+    {
+      "slot": "Base",
+      "product_types": ["foundation", "bb cream", "cc cream", "tinted moisturizer"]
+    },
+    {
+      "slot": "Concealer",
+      "product_types": ["concealer"]
+    },
+    {
+      "slot": "Blush",
+      "product_types": ["blush"]
+    },
+    {
+      "slot": "Bronzer",
+      "product_types": ["bronzer", "contour"]
+    },
+    {
+      "slot": "Highlighter",
+      "product_types": ["highlighter"]
+    },
+    {
+      "slot": "Eyeshadow",
+      "product_types": ["eyeshadow"]
+    },
+    {
+      "slot": "Eyeliner",
+      "product_types": ["eyeliner"]
+    },
+    {
+      "slot": "Mascara",
+      "product_types": ["mascara"]
+    },
+    {
+      "slot": "Lip Product",
+      "product_types": ["lipstick", "lip gloss", "lip liner", "lip stain"]
+    }
+  ]
+},
+"excluded_keywords": [
+  "fragrance",
+  "perfume",
+  "cologne",
+  "candle",
+  "supplement"
+]
 }

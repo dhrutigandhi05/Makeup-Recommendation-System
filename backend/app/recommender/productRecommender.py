@@ -142,6 +142,39 @@ def formatProductRecommendation(
         "reason": "Recommended because it " + ", ".join(reasons[:3]) + ".",
     }
 
+def isExcludedProduct(product: Product, rules: dict) -> bool:
+    excludedKeywords = rules.get("excluded_keywords", [])
+    text = buildProductText(product)
+
+    return containsAny(text, excludedKeywords)
+
+def getRoutineSlots(profile: Any, rules: dict) -> list[dict]:
+    routineSlots = rules.get("routine_slots", {})
+
+    return routineSlots.get(
+        profile.experience_level,
+        routineSlots.get("Beginner", []),
+    )
+
+def productMatchesSlot(product: Product, slot: dict) -> bool:
+    productType = str(product.product_type or "").lower().replace("_", " ")
+    category = str(product.category or "").lower().replace("_", " ")
+    text = buildProductText(product)
+
+    for slotProductType in slot.get("product_types", []):
+        normalizedSlotType = slotProductType.lower().replace("_", " ")
+
+        if normalizedSlotType == productType:
+            return True
+
+        if normalizedSlotType in category:
+            return True
+
+        if normalizedSlotType in text:
+            return True
+
+    return False
+
 def recommendProducts(db: Session, profile: Any, limit: int = 8) -> list[dict]:
     rules = loadRules()
     products = getAvailableProducts(db, profile.max_price)
@@ -149,22 +182,91 @@ def recommendProducts(db: Session, profile: Any, limit: int = 8) -> list[dict]:
     if not products:
         return []
 
+    routineSlots = getRoutineSlots(profile, rules)
+
     scoredProducts = []
 
     for product in products:
+        if isExcludedProduct(product, rules):
+            continue
+
         score, reasons, mlScore = scoreProduct(product, profile, rules)
 
         if not product.product_url and not product.website_url:
             continue
 
         scoredProducts.append(
-            formatProductRecommendation(product, score, reasons, mlScore)
+            {
+                "raw_product": product,
+                "score": score,
+                "reasons": reasons,
+                "ml_score": mlScore,
+            }
         )
 
-    scoredProducts = sorted(
-        scoredProducts,
-        key=lambda item: item["match_score"],
-        reverse=True,
-    )
+    if not scoredProducts:
+        return []
 
-    return scoredProducts[:limit]
+    finalRecommendations = []
+    usedProductIds = set()
+
+    for slot in routineSlots:
+        slotMatches = [
+            item
+            for item in scoredProducts
+            if productMatchesSlot(item["raw_product"], slot)
+            and item["raw_product"].id not in usedProductIds
+        ]
+
+        if not slotMatches:
+            continue
+
+        bestMatch = sorted(
+            slotMatches,
+            key=lambda item: item["score"],
+            reverse=True,
+        )[0]
+
+        usedProductIds.add(bestMatch["raw_product"].id)
+
+        recommendation = formatProductRecommendation(
+            bestMatch["raw_product"],
+            bestMatch["score"],
+            bestMatch["reasons"],
+            bestMatch["ml_score"],
+        )
+
+        recommendation["routine_step"] = slot["slot"]
+        finalRecommendations.append(recommendation)
+
+        if len(finalRecommendations) >= limit:
+            break
+
+    if len(finalRecommendations) < limit:
+        remainingProducts = [
+            item
+            for item in scoredProducts
+            if item["raw_product"].id not in usedProductIds
+        ]
+
+        remainingProducts = sorted(
+            remainingProducts,
+            key=lambda item: item["score"],
+            reverse=True,
+        )
+
+        for item in remainingProducts:
+            recommendation = formatProductRecommendation(
+                item["raw_product"],
+                item["score"],
+                item["reasons"],
+                item["ml_score"],
+            )
+
+            recommendation["routine_step"] = "Additional Pick"
+            finalRecommendations.append(recommendation)
+
+            if len(finalRecommendations) >= limit:
+                break
+
+    return finalRecommendations

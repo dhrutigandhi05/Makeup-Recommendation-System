@@ -7,5 +7,9 @@ def getAvailableProducts(db: Session, maxPrice: float):
         .filter(Product.price.isnot(None))
         .filter(Product.price > 0)
         .filter(Product.price <= maxPrice)
+        .filter(
+            (Product.product_url.isnot(None)) |
+            (Product.website_url.isnot(None))
+        )
         .all()
     )

@@ -208,7 +208,7 @@ function App() {
                   />
                 )}
 
-                <p className="category">{product.category}</p>
+                <p className="category">{product.routine_step ? product.routine_step : product.category}</p>
                 <h3>{product.product_name}</h3>
                 <p className="brand">{product.brand}</p>
                 <p className="price">${product.price.toFixed(2)}</p>
