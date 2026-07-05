@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.recommender.productRecommender import recommendProducts
 
-app = FastAPI(title="Makeup Recommendation API")
+app = FastAPI(title="VanityAI - Makeup Recommendation API")
 
 class RecommendationRequest(BaseModel):
     age_range: str

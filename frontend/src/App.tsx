@@ -73,7 +73,7 @@ function App() {
   return (
     <main className="app">
       <section className="hero">
-        <h1>Makeup Recommendations</h1>
+        <h1>VanityAI</h1>
         <p>
           Get personalized product recommendations based on your skin profile,
           coverage preference, budget, and skin concerns.
