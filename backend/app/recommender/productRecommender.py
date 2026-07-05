@@ -4,6 +4,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 from app.config import RECOMMENDER_RULES_PATH
 from app.dbModels import Product
+from app.ml.recommendationModelService import predictSuitabilityScore
 from app.repositories.productRepository import getAvailableProducts
 
 @lru_cache(maxsize=1)
@@ -33,15 +34,21 @@ def buildProductText(product: Product) -> str:
 
     return " ".join(str(field or "") for field in fields).lower()
 
-def scoreProduct(product: Product, profile: Any, rules: dict) -> tuple[float, list[str]]:
+def scoreProduct(
+    product: Product,
+    profile: Any,
+    rules: dict,
+) -> tuple[float, list[str], float | None]:
     weights = rules["weights"]
     skinTypeKeywords = rules["skin_type_keywords"]
     concernKeywords = rules["concern_keywords"]
     coverageKeywords = rules["coverage_keywords"]
     experienceProductTypes = rules["experience_product_types"]
     text = buildProductText(product)
-    score = weights["base_score"]
+
+    ruleScore = weights["base_score"]
     reasons = []
+
     productType = str(product.product_type or "").lower()
 
     preferredTypes = experienceProductTypes.get(
@@ -54,19 +61,19 @@ def scoreProduct(product: Product, profile: Any, rules: dict) -> tuple[float, li
     ]
 
     if productType in normalizedPreferredTypes:
-        score += weights["experience_match"]
+        ruleScore += weights["experience_match"]
         reasons.append(f"fits a {profile.experience_level.lower()} makeup routine")
 
     selectedSkinKeywords = skinTypeKeywords.get(profile.skin_type, [])
 
     if containsAny(text, selectedSkinKeywords):
-        score += weights["skin_type_match"]
+        ruleScore += weights["skin_type_match"]
         reasons.append(f"matches {profile.skin_type.lower()} skin")
 
     selectedCoverageKeywords = coverageKeywords.get(profile.coverage, [])
 
     if containsAny(text, selectedCoverageKeywords):
-        score += weights["coverage_match"]
+        ruleScore += weights["coverage_match"]
         reasons.append(f"aligns with {profile.coverage.lower()} coverage")
 
     matchedConcerns = []
@@ -83,30 +90,43 @@ def scoreProduct(product: Product, profile: Any, rules: dict) -> tuple[float, li
             weights["concern_match_per_item"] * len(matchedConcerns),
         )
 
-        score += concernScore
+        ruleScore += concernScore
         reasons.append("supports concerns like " + ", ".join(matchedConcerns))
 
     if product.price and product.price <= profile.max_price:
         priceScore = max(0, 1 - float(product.price) / profile.max_price)
-        score += weights["price_score"] * priceScore
+        ruleScore += weights["price_score"] * priceScore
         reasons.append(f"fits your ${profile.max_price:.0f} budget")
 
     if product.rating:
         ratingScore = min(float(product.rating) / 5, 1)
-        score += 0.05 * ratingScore
+        ruleScore += 0.05 * ratingScore
         reasons.append("has positive product rating data")
 
-    score = min(score, 0.99)
+    ruleScore = min(ruleScore, 0.99)
+
+    mlScore = predictSuitabilityScore(product, profile)
+
+    if mlScore is not None:
+        finalScore = (0.7 * ruleScore) + (0.3 * mlScore)
+
+        if mlScore >= 0.65:
+            reasons.append("is supported by the trained ML suitability model")
+    else:
+        finalScore = ruleScore
+
+    finalScore = min(finalScore, 0.99)
 
     if not reasons:
         reasons.append("has relevant product information for your profile")
 
-    return score, reasons
+    return finalScore, reasons, mlScore
 
 def formatProductRecommendation(
     product: Product,
     score: float,
     reasons: list[str],
+    mlScore: float | None,
 ) -> dict:
     productUrl = product.product_url or product.website_url or ""
 
@@ -118,6 +138,7 @@ def formatProductRecommendation(
         "url": productUrl,
         "image_link": product.image_link or "",
         "match_score": round(score, 2),
+        "ml_score": mlScore,
         "reason": "Recommended because it " + ", ".join(reasons[:3]) + ".",
     }
 
@@ -131,13 +152,13 @@ def recommendProducts(db: Session, profile: Any, limit: int = 8) -> list[dict]:
     scoredProducts = []
 
     for product in products:
-        score, reasons = scoreProduct(product, profile, rules)
+        score, reasons, mlScore = scoreProduct(product, profile, rules)
 
         if not product.product_url and not product.website_url:
             continue
 
         scoredProducts.append(
-            formatProductRecommendation(product, score, reasons)
+            formatProductRecommendation(product, score, reasons, mlScore)
         )
 
     scoredProducts = sorted(

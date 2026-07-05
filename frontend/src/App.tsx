@@ -215,6 +215,11 @@ function App() {
                 <p className="score">
                   Match Score: {(product.match_score * 100).toFixed(0)}%
                 </p>
+                {product.ml_score !== undefined && product.ml_score !== null && (
+                  <p className="score">
+                    ML Suitability: {(product.ml_score * 100).toFixed(0)}%
+                  </p>
+                )}
                 <p>{product.reason}</p>
                 <a href={product.url} target="_blank" rel="noreferrer">
                   View Product
