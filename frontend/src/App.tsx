@@ -63,7 +63,13 @@ function App() {
       setRecommendations(data.recommendations);
     } catch (err) {
       setRecommendations([]);
-      setError("Something went wrong while getting recommendations.");
+
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong while getting recommendations.");
+      }
+
       console.error(err);
     } finally {
       setLoading(false);
@@ -143,6 +149,8 @@ function App() {
               type="number"
               name="max_price"
               min="1"
+              max="500"
+              step="1"
               value={formData.max_price}
               onChange={handleInputChange}
             />
