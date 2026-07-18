@@ -25,3 +25,12 @@ export type RecommendationResponse = {
   profile: RecommendationRequest;
   recommendations: ProductRecommendation[];
 };
+
+export type FormOptions = {
+  age_ranges: string[];
+  skin_types: string[];
+  experience_levels: string[];
+  coverage_preferences: string[];
+  skin_tones: string[];
+  skin_concerns: string[];
+};

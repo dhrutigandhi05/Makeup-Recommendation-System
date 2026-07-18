@@ -1,4 +1,8 @@
-import type {RecommendationRequest, RecommendationResponse} from "../types/recommendation";
+import type {
+  FormOptions,
+  RecommendationRequest,
+  RecommendationResponse,
+} from "../types/recommendation";
 
 type FastApiValidationError = {
   detail?: {
@@ -57,6 +61,16 @@ export async function getRecommendations(
     }
 
     throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
+export async function getFormOptions(): Promise<FormOptions> {
+  const response = await fetch("/api/form-options");
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch form options.");
   }
 
   return response.json();

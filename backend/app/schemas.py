@@ -62,3 +62,11 @@ class ProductRecommendation(BaseModel):
 class RecommendationResponse(BaseModel):
     profile: RecommendationRequest
     recommendations: List[ProductRecommendation]
+
+class FormOptionsResponse(BaseModel):
+    age_ranges: List[str]
+    skin_types: List[str]
+    experience_levels: List[str]
+    coverage_preferences: List[str]
+    skin_tones: List[str]
+    skin_concerns: List[str]
