@@ -127,3 +127,41 @@ This allows the model to learn a more realistic recommendation task:
 
 ```text
 Product + skin type + skin tone → suitable or not suitable
+```
+The model uses:
+
+* TF-IDF text features
+* Calibrated LinearSVC classification
+* Product metadata
+* Skin profile text
+* Review-based suitability labels
+* Model Performance
+
+## Recommendation Workflow
+1. The user opens the web app.
+2. The frontend loads valid form options from the FastAPI backend.
+3. The user fills out their beauty profile.
+4. The user clicks Get Recommendations.
+5. React sends the user profile to the FastAPI backend.
+6. The backend validates the request using Pydantic.
+7. The recommendation engine retrieves matching products from PostgreSQL.
+8. Products are scored using rule-based logic.
+9. The ML model predicts product-profile suitability.
+10. Rule scores and ML scores are combined into a final match score.
+11. The backend returns a curated product routine.
+12. The frontend displays the recommendations as product cards.
+
+## App Architecture
+React Frontend
+    ↓
+FastAPI Backend
+    ↓
+PostgreSQL Database
+    ↓
+Recommendation Engine
+    ↓
+Rule-Based Scoring + ML Suitability Model
+    ↓
+Ranked Product Recommendations
+    ↓
+Product Cards with Explanations
