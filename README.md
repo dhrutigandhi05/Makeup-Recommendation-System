@@ -1,12 +1,12 @@
 # VanityAI
 
-A makeup recommendation app that suggests products based on a user’s beauty profile, preferences, budget, and skin concerns.
+VanityAI is a full-stack AI/ML makeup recommendation app that suggests products based on a user’s beauty profile, preferences, budget, and skin concerns. The app takes a user profile, scores available products using a hybrid recommendation system, and returns a curated makeup routine with product cards, match scores, ML suitability scores, and plain-English explanations.
 
 ## Project Overview
 
-This project helps users discover personalized makeup and skincare products by filling out a simple profile form. The system uses a hybrid recommendation approach that combines rule-based filtering, machine learning, NLP text features, review data, and product-user similarity scoring.
+VanityAI helps users discover personalized makeup products by filling out a simple beauty profile form. The system combines rule-based recommendation logic with a trained machine learning model to rank products based on user preferences and product suitability.
 
-The goal of this project is to build a portfolio-ready full-stack application that demonstrates frontend development, backend API design, data cleaning, machine learning, natural language processing, recommendation systems, and explainable AI.
+The goal of this project is to demonstrate a complete portfolio-ready AI/ML application, including frontend development, backend API design, database integration, data cleaning, machine learning, NLP text features, recommendation logic, and explainable product recommendations.
 
 ## Features
 
@@ -22,46 +22,45 @@ Users can enter:
 
 The app returns recommended products with:
 
+* Routine step
 * Product name
 * Brand
 * Category
 * Price
+* Product image
 * Product link
 * Match score
+* ML suitability score
 * Explanation for why the product was recommended
 
 ## Tech Stack
 
 ### Frontend
-
 * React
 * TypeScript
-* Vite
-* Tailwind CSS
+* CSS
 
 ### Backend
-
 * Python
 * FastAPI
 * Pydantic
 * Uvicorn
+* SQLAlchemy
+
+### Database
+* PostgreSQL
+* Docker
 
 ### Machine Learning and Data
-
 * pandas
 * numpy
 * scikit-learn
 * TF-IDF Vectorizer
 * LinearSVC
-* cosine similarity
-* Jupyter notebooks
-
-### Database
-
-* PostgreSQL
+* CalibratedClassifierCV
+* joblib
 
 ## Data Sources
-
 ### Makeup API
 
 Used for makeup product information such as:
@@ -73,12 +72,16 @@ Used for makeup product information such as:
 * Product links
 * Product images
 * Categories
+* Descriptions
+* Tags
 
-`https://makeup-api.herokuapp.com/`
+Source: `https://makeup-api.herokuapp.com/`
 
 ### Sephora Products and Skincare Reviews Dataset
 
-Used for:
+Used for model training and product-profile suitability learning.
+
+The dataset provides:
 
 * Product reviews
 * Ratings
@@ -86,46 +89,41 @@ Used for:
 * Skin tone information
 * Review text
 * Product metadata
-* Sentiment patterns
+* User recommendation indicators
 
-`https://www.kaggle.com/datasets/nadyinky/sephora-products-and-skincare-reviews`
+Source: `https://www.kaggle.com/datasets/nadyinky/sephora-products-and-skincare-reviews`
 
 ## Machine Learning Approach
 
-The recommendation engine combines:
+VanityAI uses a hybrid recommendation approach that combines rule-based scoring with a trained ML suitability model.
 
-* Rule-based filtering
-* LinearSVC classification
-* TF-IDF text features
-* Product-user similarity scoring
-* Review and rating-based scoring
-* Price-based scoring
+The recommendation system considers:
 
-The LinearSVC model is used as a product suitability classifier. It predicts whether a product is suitable for a user profile.
+* Product price
+* Product category
+* Product type
+* Skin type compatibility
+* Skin tone profile
+* Coverage preference
+* Makeup experience level
+* Skin concerns
+* Product descriptions and tags
+* Review-based suitability patterns
 
-## User Workflow
+The improved ML model is trained on an aggregated product-profile suitability dataset. Instead of training only on individual review text, the dataset groups reviews by:
 
-1. User opens the web app.
-2. User fills out the beauty profile form.
-3. User clicks **Get Recommendations**.
-4. React sends the profile data to the FastAPI backend.
-5. Backend validates the input.
-6. Recommendation engine filters and scores products.
-7. Backend returns ranked product recommendations.
-8. Frontend displays the recommendations as product cards.
+* Product
+* Skin type
+* Skin tone
 
-## App Architecture
+For each product-profile group, the system calculates:
+
+* Review count
+* Average rating
+* Recommendation rate
+* Suitability label
+
+This allows the model to learn a more realistic recommendation task:
 
 ```text
-React Frontend
-    ↓
-FastAPI Backend
-    ↓
-Recommendation Engine
-    ↓
-Cleaned Product Dataset
-    ↓
-LinearSVC + TF-IDF + Scoring Rules
-    ↓
-Ranked Product Recommendations
-```
+Product + skin type + skin tone → suitable or not suitable
