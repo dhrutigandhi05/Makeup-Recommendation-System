@@ -11,9 +11,9 @@ sys.path.append(str(BACKEND_DIR))
 from app.database import Base, engine
 from app.dbModels import ProductProfileSuitability
 
-MIN_REVIEW_COUNT = 5
-SUITABLE_RECOMMENDATION_RATE = 0.70
-UNSUITABLE_RECOMMENDATION_RATE = 0.40
+MIN_REVIEW_COUNT = 10
+SUITABLE_RECOMMENDATION_RATE = 0.90
+UNSUITABLE_RECOMMENDATION_RATE = 0.75
 
 def normalizeSkinType(value) -> str:
     if pd.isna(value):
