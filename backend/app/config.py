@@ -32,5 +32,15 @@ ML_METRICS_PATH = ROOT_DIR / os.getenv(
     "models/recommendationModelMetrics.json",
 )
 
+PROFILE_SUITABILITY_MODEL_PATH = ROOT_DIR / os.getenv(
+    "PROFILE_SUITABILITY_MODEL_PATH",
+    "models/profileSuitabilityModel.joblib",
+)
+
+PROFILE_SUITABILITY_METRICS_PATH = ROOT_DIR / os.getenv(
+    "PROFILE_SUITABILITY_METRICS_PATH",
+    "models/profileSuitabilityModelMetrics.json",
+)
+
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL is missing")
