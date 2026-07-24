@@ -37,3 +37,21 @@ class ProductReview(Base):
     review_title = Column(Text, nullable=True)
     review_text = Column(Text, nullable=True)
     combined_text = Column(Text, nullable=True)
+
+class ProductProfileSuitability(Base):
+    __tablename__ = "product_profile_suitability"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source = Column(String(50), nullable=False, index=True)
+    source_product_id = Column(String(100), nullable=False, index=True)
+    product_name = Column(String(500), nullable=False)
+    brand_name = Column(String(300), nullable=True)
+    skin_type = Column(String(100), nullable=True)
+    skin_tone = Column(String(100), nullable=True)
+    review_count = Column(Integer, nullable=False)
+    average_rating = Column(Float, nullable=True)
+    recommendation_rate = Column(Float, nullable=True)
+    target_suitable = Column(Integer, nullable=False)
+    product_text = Column(Text, nullable=True)
+    profile_text = Column(Text, nullable=True)
+    training_text = Column(Text, nullable=True)
