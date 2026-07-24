@@ -1,24 +1,15 @@
-import math
 from functools import lru_cache
 from typing import Any
 import joblib
-from app.config import ML_MODEL_PATH
+from app.config import PROFILE_SUITABILITY_MODEL_PATH
 from app.dbModels import Product
 
 @lru_cache(maxsize=1)
 def loadRecommendationModel():
-    if not ML_MODEL_PATH.exists():
+    if not PROFILE_SUITABILITY_MODEL_PATH.exists():
         return None
 
-    return joblib.load(ML_MODEL_PATH)
-
-def sigmoid(value: float) -> float:
-    if value >= 0:
-        z = math.exp(-value)
-        return 1 / (1 + z)
-
-    z = math.exp(value)
-    return z / (1 + z)
+    return joblib.load(PROFILE_SUITABILITY_MODEL_PATH)
 
 def buildModelText(product: Product, profile: Any) -> str:
     productText = " ".join(
@@ -35,16 +26,12 @@ def buildModelText(product: Product, profile: Any) -> str:
         ]
     )
 
-    userProfileText = (
+    profileText = (
         f"skin type {profile.skin_type} "
-        f"skin tone {profile.skin_tone} "
-        f"coverage preference {profile.coverage} "
-        f"experience level {profile.experience_level} "
-        f"age range {profile.age_range} "
-        f"skin concerns {' '.join(profile.skin_concerns)}"
+        f"skin tone {profile.skin_tone}"
     )
 
-    return f"{productText} {userProfileText}"
+    return f"{productText} {profileText}"
 
 def predictSuitabilityScore(product: Product, profile: Any) -> float | None:
     model = loadRecommendationModel()
@@ -54,9 +41,9 @@ def predictSuitabilityScore(product: Product, profile: Any) -> float | None:
 
     modelText = buildModelText(product, profile)
 
-    if hasattr(model, "decision_function"):
-        decisionScore = model.decision_function([modelText])[0]
-        return round(sigmoid(float(decisionScore)), 4)
+    if hasattr(model, "predict_proba"):
+        probability = model.predict_proba([modelText])[0][1]
+        return round(float(probability), 4)
 
     prediction = model.predict([modelText])[0]
     return float(prediction)
